@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration - VisionLog</title>
+    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/dark-mode.css')}}" id="dark-mode-css" disabled>
+    <style>
+        .form-group{margin-bottom:18px;text-align:left;}label{display:block;margin-bottom:5px;color:#4c1d95;font-weight:500;}
+        input,select{width:100%;padding:12px 18px;border:2px solid #e5e7eb;border-radius:50px;font-size:15px;outline:none;transition:border-color 0.2s;box-sizing:border-box;background:white;}
+        input:focus,select:focus{border-color:#a78bfa;}
+        .captcha-box{background:#f3e8ff;padding:15px;border-radius:15px;margin:15px 0;text-align:left;}
+        .captcha-box label{color:#4c1d95;font-weight:600;}
+        .btn{width:100%;margin-top:10px;}
+        .regno-status{font-size:14px;margin-top:5px;padding:5px 10px;border-radius:50px;}
+        .regno-available{background:#d1fae5;color:#065f46;}.regno-taken{background:#fee2e2;color:#991b1b;}
+        .voice-indicator{text-align:right;font-size:12px;color:#8b5cf6;margin-top:5px;cursor:pointer;}
+        .course-info-box{background:#f0f9ff;border:2px solid #a78bfa;padding:15px;border-radius:15px;margin-bottom:20px;display:flex;align-items:center;gap:15px;}
+        .course-info-icon{font-size:40px;}.course-info-text h4{margin:0;color:#4c1d95;}.course-info-text p{margin:5px 0 0;font-size:13px;color:#6b7280;}
+        .course-prefix-badge{display:inline-block;background:#a78bfa;color:white;padding:2px 8px;border-radius:50px;font-size:12px;margin-left:5px;}
+        #photoVideo{width:100%;max-width:300px;border-radius:15px;margin:10px auto;display:block;background:#1f2937;}
+        .photo-capture-box{background:#fef3c7;padding:15px;border-radius:15px;margin:15px 0;text-align:center;}
+        .password-wrapper{position:relative;width:100%;}.password-wrapper input{padding-right:50px;}
+        .show-password-label{position:absolute;right:15px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:20px;color:#8b5cf6;user-select:none;line-height:1;}
+        .section-divider{border-top:1px solid #e5e7eb;margin:20px 0;padding-top:10px;}
+        .section-title{font-size:14px;font-weight:600;color:#8b5cf6;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;}
+    </style>
+</head>
+<body>
+    <a href="javascript:void(0)" onclick="toggleDarkMode()" id="darkToggle" style="position:fixed;top:20px;right:20px;z-index:99999;background:#a78bfa;color:white;padding:10px 18px;border-radius:50px;font-size:14px;cursor:pointer;box-shadow:0 5px 20px rgba(0,0,0,0.3);text-decoration:none;font-weight:600;">🌙 Dark</a>
+    <div class="container">
+        <img src="{{url_for('static',filename='images/logo.png')}}" alt="VisionLog" style="max-width:80px;border-radius:10px;margin-bottom:5px;display:block;margin-left:auto;margin-right:auto;">
+        <h1>📝 Student Registration</h1>
+        <p style="margin-bottom:5px;">Fill in your details to create an account</p>
+        <div class="voice-indicator" id="voiceToggle" title="Toggle voice assistant">🔊 Voice On</div>
+        {% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}{% for c,m in messages %}<div class="flash-{{c}}">{{m}}</div>{% endfor %}{% endif %}{% endwith %}
+        <form method="POST" id="registerForm">
+            
+            <!-- ====== ACADEMIC DETAILS ====== -->
+            <div class="section-title">📚 Academic Details</div>
+            <div class="form-group">
+                <label>🎓 Course / Stream *</label>
+                <select name="course" id="courseSelect" required onchange="onCourseChange()">
+                    <option value="">— Select Your Course —</option>
+                    {% for c in courses %}<option value="{{c}}">{{c}}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="course-info-box" id="courseInfoBox" style="display:none;">
+                <div class="course-info-icon">📚</div>
+                <div class="course-info-text"><h4 id="courseInfoTitle"></h4><p id="courseInfoDesc"></p></div>
+            </div>
+            <div class="form-group">
+                <label>📚 Year *</label>
+                <select name="year" required>
+                    <option value="1st">1st Year</option>
+                    <option value="2nd">2nd Year</option>
+                    <option value="3rd">3rd Year</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>🆔 Registration Number * <span id="coursePrefixBadge" class="course-prefix-badge" style="display:none;"></span></label>
+                <input type="text" name="reg_no" id="regNoInput" placeholder="Auto-generated or enter manually" oninput="checkRegNo()">
+                <div id="regnoStatus" class="regno-status" style="display:none;"></div>
+            </div>
+
+            <!-- ====== PERSONAL DETAILS ====== -->
+            <div class="section-title">👤 Personal Details</div>
+            <div class="form-group"><label>👤 Full Name *</label><input type="text" name="name" placeholder="Enter your full name as per records" required></div>
+            <div class="form-group"><label>📧 Email Address *</label><input type="email" name="email" placeholder="yourname@example.com" required></div>
+            <div class="form-group"><label>📱 Mobile Number *</label><input type="tel" name="mobile" placeholder="10-digit mobile number" required></div>
+            <div class="form-group">
+                <label>🔒 Password *</label>
+                <div class="password-wrapper">
+                    <input type="password" name="password" id="passwordInput" placeholder="Minimum 6 characters" required>
+                    <label class="show-password-label" onclick="var i=document.getElementById('passwordInput');var t=this;if(i.type==='password'){i.type='text';t.textContent='🙈';}else{i.type='password';t.textContent='👁️';}">👁️</label>
+                </div>
+            </div>
+
+            <!-- ====== SECURITY ====== -->
+            <div class="section-title">🔐 Security</div>
+            <div class="form-group"><label>🔐 Security Question *</label><select name="security_question" required>{% for q in security_questions %}<option value="{{q}}">{{q}}</option>{% endfor %}</select></div>
+            <div class="form-group"><label>✍️ Your Answer *</label><input type="text" name="security_answer" placeholder="Your answer" required></div>
+
+            <!-- ====== PHOTO ====== -->
+            <div class="section-title">📸 Student Photo</div>
+            <div class="photo-capture-box">
+                <video id="photoVideo" autoplay playsinline></video>
+                <canvas id="photoCanvas" style="display:none;"></canvas>
+                <button type="button" class="btn" id="capturePhotoBtn" style="background:#8b5cf6;">📷 Capture Photo</button>
+                <button type="button" class="btn" id="retakePhotoBtn" style="display:none;background:#fbbf24;">🔄 Retake</button>
+                <input type="hidden" name="photo" id="photoInput">
+                <p id="photoStatus" style="font-size:12px;color:#6b7280;margin-top:5px;"></p>
+            </div>
+
+            <!-- ====== VERIFICATION ====== -->
+            <div class="section-title">🤖 Verification</div>
+            <div class="captcha-box"><label>🤖 Solve: {{captcha_q}}</label><input type="number" name="captcha" placeholder="Your answer" required></div>
+            <button type="submit" class="btn">✅ Register</button>
+        </form>
+        <p style="margin-top:20px;">Already registered? <a href="{{url_for('student_login')}}">Login here</a><br><a href="{{url_for('home')}}">← Back to Home</a></p>
+    </div>
+    <script>
+        let voiceOn=true;const voiceToggle=document.getElementById('voiceToggle');
+        function speak(t){if(voiceOn&&'speechSynthesis' in window){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);const vs=speechSynthesis.getVoices();const bv=vs.find(v=>v.name.includes('Zira')||v.name.includes('David')||v.lang.startsWith('en-US'));if(bv)u.voice=bv;u.rate=0.85;speechSynthesis.speak(u);}}
+        if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();}
+        voiceToggle.addEventListener('click',()=>{voiceOn=!voiceOn;voiceToggle.textContent=voiceOn?'🔊 Voice On':'🔇 Voice Off';if(voiceOn)speak('Voice assistant enabled.');});
+        document.querySelectorAll('input,select').forEach(e=>{e.addEventListener('focus',()=>{if(e.id==='courseSelect')speak('Please select your course.');else if(e.name==='year')speak('Select your year.');else if(e.id==='regNoInput')speak('Reg number auto-generated.');else if(e.name==='name')speak('Enter full name.');else if(e.name==='email')speak('Enter valid email.');else if(e.name==='mobile')speak('Enter 10 digit mobile.');else if(e.name==='password')speak('Create strong password.');else if(e.name==='security_question')speak('Select security question.');else if(e.name==='security_answer')speak('Provide answer.');else if(e.name==='captcha')speak('Solve the math.');});});
+        window.onload=()=>{speak('Welcome to VisionLog. Select your course and year.');startPhotoCamera();};
+        async function onCourseChange(){const c=document.getElementById('courseSelect').value;const ib=document.getElementById('courseInfoBox'),it=document.getElementById('courseInfoTitle'),id=document.getElementById('courseInfoDesc'),pb=document.getElementById('coursePrefixBadge');if(c){const cn={'BCA':'Bachelor of Computer Applications','BCOM':'Bachelor of Commerce','BBA':'Bachelor of Business Administration','BSC':'Bachelor of Science','BA':'Bachelor of Arts','MCA':'Master of Computer Applications','MBA':'Master of Business Administration','MTECH':'Master of Technology','BTECH':'Bachelor of Technology'};ib.style.display='flex';it.textContent=c;id.textContent=cn[c]||'';pb.style.display='inline-block';pb.textContent=c+'xxx';speak('Selected '+c+'.');try{const r=await fetch('/api/suggest-regno/'+c);const d=await r.json();document.getElementById('regNoInput').value=d.reg_no;speak('Suggested '+d.reg_no);checkRegNo();}catch(e){}}else{ib.style.display='none';pb.style.display='none';}}
+        let t;async function checkRegNo(){clearTimeout(t);const r=document.getElementById('regNoInput').value.trim();const s=document.getElementById('regnoStatus');if(!r){s.style.display='none';return;}t=setTimeout(async()=>{try{const resp=await fetch('/api/check-regno?reg_no='+encodeURIComponent(r));const d=await resp.json();s.style.display='block';s.textContent=d.message;s.className='regno-status '+(d.available?'regno-available':'regno-taken');if(d.available)speak('Available.');else speak('Already taken.');}catch(e){}},500);}
+        let photoStream=null;const pv=document.getElementById('photoVideo'),pc=document.getElementById('photoCanvas'),cpb=document.getElementById('capturePhotoBtn'),rpb=document.getElementById('retakePhotoBtn'),pi=document.getElementById('photoInput'),pst=document.getElementById('photoStatus');
+        async function startPhotoCamera(){try{photoStream=await navigator.mediaDevices.getUserMedia({video:{width:320,height:240}});pv.srcObject=photoStream;pst.textContent='Look at camera & click Capture.';}catch(e){pst.textContent='Camera error. Photo optional.';}}
+        cpb.addEventListener('click',()=>{pc.width=pv.videoWidth;pc.height=pv.videoHeight;pc.getContext('2d').drawImage(pv,0,0);pi.value=pc.toDataURL('image/jpeg',0.8);pst.textContent='✅ Photo captured!';cpb.style.display='none';rpb.style.display='inline-block';pv.style.display='none';if(photoStream)photoStream.getTracks().forEach(t=>t.stop());});
+        rpb.addEventListener('click',()=>{pi.value='';pst.textContent='Retake photo.';cpb.style.display='inline-block';rpb.style.display='none';pv.style.display='block';startPhotoCamera();});
+        var dCSS=document.getElementById('dark-mode-css'),dTog=document.getElementById('darkToggle');
+        function ut(){if(document.body.classList.contains('dark-mode')){dTog.textContent='☀️ Light';dTog.style.background='#fbbf24';dTog.style.color='#000';}else{dTog.textContent='🌙 Dark';dTog.style.background='#a78bfa';dTog.style.color='#fff';}}
+        if(localStorage.getItem('darkMode')==='enabled'){if(dCSS)dCSS.disabled=false;document.body.classList.add('dark-mode');}ut();
+        function toggleDarkMode(){if(document.body.classList.contains('dark-mode')){document.body.classList.remove('dark-mode');if(dCSS)dCSS.disabled=true;localStorage.setItem('darkMode','disabled');}else{document.body.classList.add('dark-mode');if(dCSS)dCSS.disabled=false;localStorage.setItem('darkMode','enabled');}ut();}
+        function showToast(m,t){var c=document.querySelector('.toast-container');if(!c){c=document.createElement('div');c.className='toast-container';document.body.appendChild(c);}var n=document.createElement('div');n.className='toast toast-'+t;n.textContent=m;c.appendChild(n);setTimeout(function(){n.remove();},3500);}
+        document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.flash-success,.flash-error,.flash-info').forEach(function(f){var t='info';if(f.classList.contains('flash-success'))t='success';if(f.classList.contains('flash-error'))t='error';showToast(f.textContent.trim(),t);f.style.display='none';});});
+    </script>
+</body>
+</html>

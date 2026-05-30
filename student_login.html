@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login - VisionLog</title>
+    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/dark-mode.css')}}" id="dark-mode-css" disabled>
+    <style>
+        .login-container{max-width:420px;width:100%;margin:0 auto;}
+        .login-box{background:rgba(255,255,255,0.75);backdrop-filter:blur(20px);padding:40px 35px;border-radius:28px;box-shadow:0 20px 50px rgba(167,139,250,0.12);border:1px solid rgba(255,255,255,0.5);text-align:center;}
+        .login-box img{width:70px;border-radius:14px;margin-bottom:15px;}
+        .login-box h1{color:#4c1d95;font-size:26px;font-weight:700;margin-bottom:5px;}
+        .login-box .subtitle{color:#9ca3af;font-size:13px;margin-bottom:30px;}
+        .input-group{margin-bottom:18px;text-align:left;}
+        .input-group label{display:block;font-size:13px;font-weight:600;color:#4c1d95;margin-bottom:6px;}
+        .input-group input,.input-group select{width:100%;padding:14px 18px;border:2px solid rgba(167,139,250,0.25);border-radius:50px;font-size:14px;outline:none;background:rgba(255,255,255,0.9);transition:all 0.3s;box-sizing:border-box;}
+        .input-group input:focus,.input-group select:focus{border-color:#a78bfa;box-shadow:0 0 0 5px rgba(167,139,250,0.1);}
+        .password-wrapper{position:relative;width:100%;}.password-wrapper input{padding-right:55px;}
+        .show-password-label{position:absolute;right:15px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:20px;color:#8b5cf6;user-select:none;line-height:1;}
+        .captcha-box{background:rgba(167,139,250,0.08);padding:15px;border-radius:15px;margin:18px 0;text-align:left;}
+        .captcha-box label{color:#4c1d95;font-weight:600;font-size:14px;}
+        .login-btn{width:100%;padding:14px;background:linear-gradient(135deg,#a78bfa,#8b5cf6);color:white;border:none;border-radius:50px;font-size:16px;font-weight:600;cursor:pointer;margin-top:10px;transition:all 0.3s;box-shadow:0 8px 25px rgba(167,139,250,0.35);}
+        .login-btn:hover{transform:translateY(-3px);box-shadow:0 15px 35px rgba(167,139,250,0.55);}
+        .links{margin-top:20px;display:flex;justify-content:center;gap:15px;flex-wrap:wrap;}.links a{color:#8b5cf6;font-size:13px;font-weight:500;text-decoration:none;}.links a:hover{color:#6d28d9;text-decoration:underline;}
+        .voice-indicator{text-align:right;font-size:12px;color:#8b5cf6;margin-bottom:5px;cursor:pointer;}
+    </style>
+</head>
+<body>
+    <a href="javascript:void(0)" onclick="toggleDarkMode()" id="darkToggle" style="position:fixed;top:20px;right:20px;z-index:99999;background:#a78bfa;color:white;padding:10px 18px;border-radius:50px;font-size:14px;cursor:pointer;box-shadow:0 5px 20px rgba(0,0,0,0.3);text-decoration:none;font-weight:600;">🌙 Dark</a>
+    <div class="login-container">
+        <div class="login-box">
+            <img src="{{url_for('static',filename='images/logo.png')}}" alt="VisionLog">
+            <h1>👨‍🎓 Student Login</h1>
+            <p class="subtitle">Enter your credentials to continue</p>
+            <div class="voice-indicator" id="voiceToggle" title="Toggle voice assistant">🔊 Voice On</div>
+            {% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}{% for c,m in messages %}<div class="flash-{{c}}">{{m}}</div>{% endfor %}{% endif %}{% endwith %}
+            <form method="POST">
+                <div class="input-group"><label>Course/Stream</label><select name="course" id="courseSelect"><option value="">Select</option><option>BCA</option><option>BCOM</option><option>BBA</option><option>BSC</option><option>BA</option><option>MCA</option><option>MBA</option><option>MTECH</option><option>BTECH</option></select></div>
+                <div class="input-group"><label>Registration Number</label><input type="text" name="reg_no" id="regNoInput" placeholder="e.g., BCA001" required></div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" name="password" id="passwordInput" placeholder="Enter password" required>
+                        <label class="show-password-label" onclick="var i=document.getElementById('passwordInput');var t=this;if(i.type==='password'){i.type='text';t.textContent='🙈';}else{i.type='password';t.textContent='👁️';}">👁️</label>
+                    </div>
+                </div>
+                <div class="captcha-box"><label>🤖 Solve: {{captcha_q}}</label><input type="number" name="captcha" id="captchaInput" required></div>
+                <button type="submit" class="login-btn">Login</button>
+            </form>
+            <div class="links"><a href="{{url_for('forgot_regno')}}">Forgot Reg No?</a><span style="color:#d1d5db;">|</span><a href="{{url_for('forgot_password')}}">Forgot Password?</a><br><a href="{{url_for('student_register')}}">New? Register</a><span style="color:#d1d5db;">|</span><a href="{{url_for('home')}}">← Home</a></div>
+        </div>
+    </div>
+    <script>
+        // Voice Assistant
+        let voiceOn=true;const vt=document.getElementById('voiceToggle');
+        function speak(t){if(voiceOn&&'speechSynthesis' in window){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);const vs=speechSynthesis.getVoices();const bv=vs.find(v=>v.name.includes('Zira')||v.name.includes('David')||v.lang.startsWith('en-US'));if(bv)u.voice=bv;u.rate=0.85;speechSynthesis.speak(u);}}
+        if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();}
+        vt.addEventListener('click',()=>{voiceOn=!voiceOn;vt.textContent=voiceOn?'🔊 Voice On':'🔇 Voice Off';if(voiceOn)speak('Voice assistant enabled.');});
+        
+        // Speak on field focus
+        document.querySelectorAll('input,select').forEach(e=>{e.addEventListener('focus',()=>{
+            if(e.id==='courseSelect')speak('Please select your course or stream.');
+            else if(e.id==='regNoInput')speak('Please enter your registration number.');
+            else if(e.id==='passwordInput')speak('Please enter your password.');
+            else if(e.id==='captchaInput')speak('Please solve the math problem to verify.');
+        });});
+        
+        window.onload=()=>{speak('Welcome to VisionLog Student Login. Please enter your credentials.');};
+        
+        // Dark Mode
+        var dCSS=document.getElementById('dark-mode-css'),dTog=document.getElementById('darkToggle');
+        function ut(){if(document.body.classList.contains('dark-mode')){dTog.textContent='☀️ Light';dTog.style.background='#fbbf24';dTog.style.color='#000';}else{dTog.textContent='🌙 Dark';dTog.style.background='#a78bfa';dTog.style.color='#fff';}}
+        if(localStorage.getItem('darkMode')==='enabled'){if(dCSS)dCSS.disabled=false;document.body.classList.add('dark-mode');}ut();
+        function toggleDarkMode(){if(document.body.classList.contains('dark-mode')){document.body.classList.remove('dark-mode');if(dCSS)dCSS.disabled=true;localStorage.setItem('darkMode','disabled');}else{document.body.classList.add('dark-mode');if(dCSS)dCSS.disabled=false;localStorage.setItem('darkMode','enabled');}ut();}
+        
+        // Toast
+        function showToast(m,t){var c=document.querySelector('.toast-container');if(!c){c=document.createElement('div');c.className='toast-container';document.body.appendChild(c);}var n=document.createElement('div');n.className='toast toast-'+t;n.textContent=m;c.appendChild(n);setTimeout(function(){n.remove();},3500);}
+        document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.flash-success,.flash-error,.flash-info').forEach(function(f){var t='info';if(f.classList.contains('flash-success'))t='success';if(f.classList.contains('flash-error'))t='error';showToast(f.textContent.trim(),t);f.style.display='none';});});
+    </script>
+</body>
+</html>

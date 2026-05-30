@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Records - VisionLog</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/dark-mode.css')}}" id="dark-mode-css" disabled>
+    <style>table{width:100%;border-collapse:collapse;background:white;border-radius:15px;overflow:hidden;margin:15px 0;}th,td{padding:10px;text-align:left;border-bottom:1px solid #e5e7eb;}th{background:#a78bfa;color:white;}.filter-bar{display:flex;gap:10px;align-items:center;margin:15px 0;padding:12px;background:#fdf2f8;border-radius:12px;}.filter-bar select{padding:8px 12px;border-radius:50px;border:2px solid #e5e7eb;}</style>
+</head>
+<body>
+    <a href="javascript:void(0)" onclick="toggleDarkMode()" id="darkToggle" style="position:fixed;top:20px;right:20px;z-index:99999;background:#a78bfa;color:white;padding:10px 18px;border-radius:50px;font-size:14px;cursor:pointer;box-shadow:0 5px 20px rgba(0,0,0,0.3);text-decoration:none;font-weight:600;">🌙 Dark</a>
+    <div class="container" style="max-width:1200px;">
+        <img src="{{url_for('static',filename='images/logo.png')}}" alt="VisionLog" style="max-width:80px;border-radius:10px;margin-bottom:5px;display:block;margin-left:auto;margin-right:auto;">
+        <h1>📋 Attendance Records</h1>
+        <div class="filter-bar"><label><strong>🔍 Filter:</strong></label><select onchange="location=this.value;"><option value="{{url_for('view_attendance')}}">All</option>{% for c in courses %}<option value="{{url_for('view_attendance',course=c)}}" {% if selected_course==c %}selected{% endif %}>{{c}}</option>{% endfor %}</select>{% if selected_course %}<a href="{{url_for('view_attendance')}}" class="btn" style="padding:6px 12px;font-size:12px;">Clear</a>{% endif %}</div>
+        <table><thead><tr><th>Name</th><th>Reg No</th><th>Course</th><th>Date</th><th>Time</th><th>Status</th><th>Location</th></tr></thead>
+        <tbody>{% for att,stu in records %}<tr><td>{{stu.name}}</td><td>{{stu.reg_no}}</td><td>{{stu.course}}</td><td>{{att.timestamp.strftime('%Y-%m-%d') if att.timestamp else ''}}</td><td>{{att.timestamp.strftime('%H:%M:%S') if att.timestamp else ''}}</td><td style="color:{% if att.status=='Present' %}#065f46{% else %}#991b1b{% endif %};font-weight:600;">{{att.status}}</td><td>{{att.location_name or 'N/A'}}</td></tr>{% else %}<tr><td colspan="7" style="text-align:center;">No records.</td></tr>{% endfor %}</tbody></table>
+        <a href="{{url_for('admin_dashboard')}}" class="btn">← Back</a>
+    </div>
+    <script>
+        var dCSS=document.getElementById('dark-mode-css'),dTog=document.getElementById('darkToggle');
+        function ut(){if(document.body.classList.contains('dark-mode')){dTog.textContent='☀️ Light';dTog.style.background='#fbbf24';dTog.style.color='#000';}else{dTog.textContent='🌙 Dark';dTog.style.background='#a78bfa';dTog.style.color='#fff';}}
+        if(localStorage.getItem('darkMode')==='enabled'){if(dCSS)dCSS.disabled=false;document.body.classList.add('dark-mode');}ut();
+        function toggleDarkMode(){if(document.body.classList.contains('dark-mode')){document.body.classList.remove('dark-mode');if(dCSS)dCSS.disabled=true;localStorage.setItem('darkMode','disabled');}else{document.body.classList.add('dark-mode');if(dCSS)dCSS.disabled=false;localStorage.setItem('darkMode','enabled');}ut();}
+    </script>
+</body>
+</html>

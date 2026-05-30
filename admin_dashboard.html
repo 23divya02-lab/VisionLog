@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - VisionLog</title>
+    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/dark-mode.css')}}" id="dark-mode-css" disabled>
+    <style>
+        .dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;margin:20px 0;}
+        .card{background:white;padding:20px;border-radius:15px;box-shadow:0 5px 15px rgba(0,0,0,0.05);transition:transform 0.2s;text-decoration:none;color:#4c1d95;text-align:center;}
+        .card:hover{transform:translateY(-5px);}.card h3{margin:0 0 8px 0;font-size:16px;}.card p{margin:0;color:#6b7280;font-size:13px;}
+        .logout-btn{background:#f87171;color:white;padding:10px 20px;border-radius:50px;text-decoration:none;display:inline-block;margin-top:20px;}
+        .add-btn{background:#34d399;color:white;padding:10px 20px;border-radius:50px;text-decoration:none;display:inline-block;margin:15px 0;}
+        table{width:100%;border-collapse:collapse;margin-top:15px;background:white;border-radius:15px;overflow:hidden;box-shadow:0 5px 15px rgba(0,0,0,0.05);}
+        th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:12px;}th{background:#a78bfa;color:white;font-weight:600;font-size:11px;}tr:hover{background:#fdf2f8;}
+        .action-btn{padding:5px 10px;border-radius:50px;text-decoration:none;font-size:11px;margin-right:2px;display:inline-block;}
+        .edit-btn{background:#fbbf24;color:white;}.delete-btn{background:#ef4444;color:white;}.view-btn{background:#8b5cf6;color:white;}
+        .action-buttons{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;align-items:center;}
+        .export-btn{background:#60a5fa;color:white;padding:8px 15px;border-radius:50px;text-decoration:none;font-size:13px;white-space:nowrap;}
+        .pdf-btn{background:#8b5cf6;color:white;padding:8px 15px;border-radius:50px;text-decoration:none;font-size:13px;}
+        .attendance-btn{background:#8b5cf6;color:white;padding:8px 15px;border-radius:50px;text-decoration:none;}
+        .filter-bar{display:flex;gap:15px;align-items:center;flex-wrap:wrap;margin:15px 0;padding:12px 15px;background:#fdf2f8;border-radius:12px;}
+        .filter-bar select{padding:8px 12px;border:2px solid #e5e7eb;border-radius:50px;font-size:13px;outline:none;background:white;}
+        .filter-bar label{font-weight:600;color:#4c1d95;font-size:13px;}.filter-bar .btn-sm{padding:6px 12px;font-size:13px;border-radius:50px;background:#a78bfa;color:white;text-decoration:none;}
+        .course-badge{display:inline-block;padding:3px 8px;border-radius:50px;font-size:11px;font-weight:600;color:white;}
+        .badge-BCA{background:#a78bfa;}.badge-BCOM{background:#34d399;}.badge-BBA{background:#fbbf24;color:#4c1d95;}.badge-BSC{background:#60a5fa;}.badge-BA{background:#f472b6;}.badge-MCA{background:#8b5cf6;}.badge-MBA{background:#f87171;}.badge-MTECH{background:#2dd4bf;}.badge-BTECH{background:#818cf8;}
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:15px 0;}
+        .stat-card{background:white;padding:12px;border-radius:12px;text-align:center;box-shadow:0 5px 15px rgba(0,0,0,0.05);}.stat-card h4{margin:0 0 3px 0;color:#4c1d95;font-size:13px;}.stat-card p{margin:0;font-size:20px;font-weight:700;}
+        .export-form{display:flex;gap:5px;align-items:center;}.export-form select{padding:8px 12px;border:2px solid #e5e7eb;border-radius:50px;font-size:13px;outline:none;background:white;}
+        .export-section{background:#f0f9ff;padding:15px;border-radius:15px;margin:15px 0;}
+        .year-badge{display:inline-block;padding:2px 7px;border-radius:50px;font-size:10px;font-weight:600;background:#e0e7ff;color:#3730a3;margin-left:3px;}
+    </style>
+</head>
+<body>
+    <a href="javascript:void(0)" onclick="toggleDarkMode()" id="darkToggle" style="position:fixed;top:20px;right:20px;z-index:99999;background:#a78bfa;color:white;padding:10px 18px;border-radius:50px;font-size:14px;cursor:pointer;box-shadow:0 5px 20px rgba(0,0,0,0.3);text-decoration:none;font-weight:600;">🌙 Dark</a>
+    <a href="{{url_for('view_database')}}" class="card">
+    <h3>🗄️ View Database</h3>
+    <p>Browse all student records</p>
+</a>
+    <div class="container" style="max-width:1300px;">
+        <img src="{{url_for('static',filename='images/logo.png')}}" alt="VisionLog" style="max-width:90px;border-radius:12px;margin-bottom:5px;">
+        <h1>📊 Admin Dashboard</h1><p>Welcome{% if admin_username %}, {{admin_username}}{% endif %}!</p>
+        {% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}{% for c,m in messages %}<div class="flash-{{c}}">{{m}}</div>{% endfor %}{% endif %}{% endwith %}
+        <div class="stats-grid">{% for s in course_stats %}<div class="stat-card"><h4>{{s.course}}</h4><p>{{s.count}}</p></div>{% endfor %}{% if not course_stats %}<div class="stat-card"><h4>No Data</h4><p>0</p></div>{% endif %}</div>
+        <div class="dashboard-grid">
+            <a href="{{url_for('add_student')}}" class="card"><h3>➕ Add Student</h3><p>Register new student</p></a>
+            <a href="{{url_for('view_attendance')}}" class="card"><h3>📋 View Attendance</h3><p>See all records</p></a>
+            <a href="{{url_for('admin_holidays')}}" class="card"><h3>📅 Holidays</h3><p>Manage holidays</p></a>
+            <a href="{{url_for('admin_settings')}}" class="card"><h3>⚙️ Settings</h3><p>Configure system</p></a>
+        </div>
+        <div class="action-buttons"><a href="{{url_for('add_student')}}" class="add-btn">➕ Add New Student</a><a href="{{url_for('view_attendance')}}" class="attendance-btn">👁️ View Attendance Log</a></div>
+        <div class="export-section">
+            <h3 style="color:#4c1d95;margin-bottom:10px;">📥 Export Attendance Reports</h3>
+            <div class="action-buttons">
+                <a href="{{url_for('export_attendance',type='summary')}}" class="export-btn">📊 Summary</a>
+                <a href="{{url_for('export_attendance',type='detailed')}}" class="export-btn">📋 Detailed</a>
+                <a href="{{url_for('export_pdf')}}" class="pdf-btn">📄 PDF</a>
+            </div>
+        </div>
+        
+        <!-- FILTER BAR WITH COURSE + YEAR -->
+        <div class="filter-bar">
+            <label>🔍 Course:</label>
+            <select onchange="filterStudents()" id="courseFilter">
+                <option value="">All Courses</option>
+                {% for c in courses %}
+                <option value="{{c}}" {% if selected_course==c %}selected{% endif %}>{{c}}</option>
+                {% endfor %}
+            </select>
+            
+            <label>📚 Year:</label>
+            <select onchange="filterStudents()" id="yearFilter">
+                <option value="">All Years</option>
+                {% for y in years %}
+                <option value="{{y}}" {% if selected_year==y %}selected{% endif %}>{{y}} Year</option>
+                {% endfor %}
+            </select>
+            
+            {% if selected_course or selected_year %}
+            <a href="{{url_for('admin_dashboard')}}" class="btn-sm">Clear All Filters</a>
+            {% endif %}
+        </div>
+        
+        <h2 style="color:#4c1d95;">📋 Students {% if selected_course %}<span style="font-size:14px;color:#6b7280;">— {{selected_course}}</span>{% endif %}{% if selected_year %}<span style="font-size:14px;color:#6b7280;"> — {{selected_year}} Year</span>{% endif %}</h2>
+        <table><thead><tr><th>Reg No</th><th>Name</th><th>Course</th><th>Year</th><th>Email</th><th>Mobile</th><th>Attendance</th><th>Actions</th></tr></thead>
+        <tbody>{% for item in student_data %}<tr>
+            <td><strong>{{item.student.reg_no}}</strong></td>
+            <td><a href="{{url_for('admin_student_chart',id=item.student.id)}}" style="color:#4c1d95;text-decoration:none;font-weight:600;">{{item.student.name}}</a></td>
+            <td><span class="course-badge badge-{{item.student.course}}">{{item.student.course}}</span></td>
+            <td><span class="year-badge">{{item.student.year}} Year</span></td>
+            <td>{{item.student.email}}</td><td>{{item.student.mobile}}</td>
+            <td style="font-size:11px;"><span style="color:#065f46;">✅{{item.stats.present}}</span> <span style="color:#991b1b;">❌{{item.stats.total_working-item.stats.present}}</span> <span style="color:#a78bfa;">{{item.stats.percentage}}%</span></td>
+            <td><a href="{{url_for('admin_student_chart',id=item.student.id)}}" class="action-btn view-btn">📊</a><a href="{{url_for('edit_student',id=item.student.id)}}" class="action-btn edit-btn">Edit</a><a href="{{url_for('delete_student',id=item.student.id)}}" class="action-btn delete-btn" onclick="return confirm('Delete?');">Del</a></td>
+        </tr>{% else %}<tr><td colspan="8" style="text-align:center;">No students.</td></tr>{% endfor %}</tbody></table>
+        <div class="stats-grid" style="margin:15px 0;"><div class="stat-card" style="border-left:4px solid #10b981;"><h4>🟢 Safe</h4><p style="color:#10b981;">{{green_count}}</p></div><div class="stat-card" style="border-left:4px solid #f59e0b;"><h4>🟡 Warning</h4><p style="color:#f59e0b;">{{yellow_count}}</p></div><div class="stat-card" style="border-left:4px solid #ef4444;"><h4>🔴 Critical</h4><p style="color:#ef4444;">{{red_count}}</p></div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;"><a href="{{url_for('export_green')}}" class="btn" style="background:#10b981;font-size:12px;">🟢 Safe</a><a href="{{url_for('export_yellow')}}" class="btn" style="background:#f59e0b;color:#000;font-size:12px;">🟡 Warning</a><a href="{{url_for('export_red')}}" class="btn" style="background:#ef4444;font-size:12px;">🔴 Critical</a></div>
+        <a href="{{url_for('admin_logout')}}" class="logout-btn">🚪 Logout</a><br><br><a href="{{url_for('home')}}">← Back to Home</a>
+    </div>
+    <script>
+        function filterStudents(){
+            var course=document.getElementById('courseFilter').value;
+            var year=document.getElementById('yearFilter').value;
+            var url="{{url_for('admin_dashboard')}}";
+            var params=[];
+            if(course)params.push('course='+course);
+            if(year)params.push('year='+year);
+            if(params.length>0)url+='?'+params.join('&');
+            location=url;
+        }
+        var dCSS=document.getElementById('dark-mode-css'),dTog=document.getElementById('darkToggle');
+        function ut(){if(document.body.classList.contains('dark-mode')){dTog.textContent='☀️ Light';dTog.style.background='#fbbf24';dTog.style.color='#000';}else{dTog.textContent='🌙 Dark';dTog.style.background='#a78bfa';dTog.style.color='#fff';}}
+        if(localStorage.getItem('darkMode')==='enabled'){if(dCSS)dCSS.disabled=false;document.body.classList.add('dark-mode');}ut();
+        function toggleDarkMode(){if(document.body.classList.contains('dark-mode')){document.body.classList.remove('dark-mode');if(dCSS)dCSS.disabled=true;localStorage.setItem('darkMode','disabled');}else{document.body.classList.add('dark-mode');if(dCSS)dCSS.disabled=false;localStorage.setItem('darkMode','enabled');}ut();}
+        function showToast(m,t){var c=document.querySelector('.toast-container');if(!c){c=document.createElement('div');c.className='toast-container';document.body.appendChild(c);}var n=document.createElement('div');n.className='toast toast-'+t;n.textContent=m;c.appendChild(n);setTimeout(function(){n.remove();},3500);}
+        document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.flash-success,.flash-error,.flash-info').forEach(function(f){var t='info';if(f.classList.contains('flash-success'))t='success';if(f.classList.contains('flash-error'))t='error';showToast(f.textContent.trim(),t);f.style.display='none';});});
+    </script>
+</body>
+</html>

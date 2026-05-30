@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Student - VisionLog</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/dark-mode.css')}}" id="dark-mode-css" disabled>
+    <style>.form-group{margin-bottom:15px;text-align:left;}label{display:block;margin-bottom:4px;color:#4c1d95;}input,select{width:100%;padding:10px;border:2px solid #e5e7eb;border-radius:50px;box-sizing:border-box;}.submit-btn{background:#34d399;color:white;padding:10px 20px;border:none;border-radius:50px;font-weight:600;cursor:pointer;width:100%;}</style>
+</head>
+<body>
+    <a href="javascript:void(0)" onclick="toggleDarkMode()" id="darkToggle" style="position:fixed;top:20px;right:20px;z-index:99999;background:#a78bfa;color:white;padding:10px 18px;border-radius:50px;font-size:14px;cursor:pointer;box-shadow:0 5px 20px rgba(0,0,0,0.3);text-decoration:none;font-weight:600;">🌙 Dark</a>
+    <div class="container">
+        <img src="{{url_for('static',filename='images/logo.png')}}" alt="VisionLog" style="max-width:80px;border-radius:10px;margin-bottom:5px;display:block;margin-left:auto;margin-right:auto;">
+        <h1>➕ Add New Student</h1>
+        {% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}{% for c,m in messages %}<div class="flash-{{c}}">{{m}}</div>{% endfor %}{% endif %}{% endwith %}
+        <form method="POST"><div class="form-group"><label>Course *</label><select name="course" required onchange="onCourseChange()"><option value="">Select</option>{% for c in courses %}<option value="{{c}}">{{c}}</option>{% endfor %}</select></div><div class="form-group"><label>Reg No *</label><input type="text" name="reg_no" id="regNoInput" placeholder="Auto or manual" oninput="checkRegNo()"><div id="regnoStatus" style="font-size:12px;margin-top:3px;"></div></div><div class="form-group"><label>Full Name *</label><input type="text" name="name" required></div><div class="form-group"><label>Email *</label><input type="email" name="email" required></div><div class="form-group"><label>Mobile *</label><input type="tel" name="mobile" required></div><div class="form-group"><label>Password *</label><input type="password" name="password" required></div><button type="submit" class="submit-btn">Add Student</button></form>
+        <a href="{{url_for('admin_dashboard')}}" style="display:inline-block;margin-top:15px;color:#6b7280;text-decoration:none;">← Back</a>
+    </div>
+    <script>
+        async function onCourseChange(){const c=document.getElementById('courseSelect').value;if(c){try{const r=await fetch(`/api/suggest-regno/${c}`);const d=await r.json();document.getElementById('regNoInput').value=d.reg_no;checkRegNo();}catch(e){}}}
+        let t;async function checkRegNo(){clearTimeout(t);const r=document.getElementById('regNoInput').value.trim();const s=document.getElementById('regnoStatus');if(!r){s.textContent='';return;}t=setTimeout(async()=>{try{const resp=await fetch(`/api/check-regno?reg_no=${encodeURIComponent(r)}`);const d=await resp.json();s.textContent=d.message;s.style.color=d.available?'#065f46':'#991b1b';}catch(e){}},500);}
+        var dCSS=document.getElementById('dark-mode-css'),dTog=document.getElementById('darkToggle');
+        function ut(){if(document.body.classList.contains('dark-mode')){dTog.textContent='☀️ Light';dTog.style.background='#fbbf24';dTog.style.color='#000';}else{dTog.textContent='🌙 Dark';dTog.style.background='#a78bfa';dTog.style.color='#fff';}}
+        if(localStorage.getItem('darkMode')==='enabled'){if(dCSS)dCSS.disabled=false;document.body.classList.add('dark-mode');}ut();
+        function toggleDarkMode(){if(document.body.classList.contains('dark-mode')){document.body.classList.remove('dark-mode');if(dCSS)dCSS.disabled=true;localStorage.setItem('darkMode','disabled');}else{document.body.classList.add('dark-mode');if(dCSS)dCSS.disabled=false;localStorage.setItem('darkMode','enabled');}ut();}
+    </script>
+</body>
+</html>

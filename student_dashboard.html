@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - VisionLog</title>
+    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/dark-mode.css')}}" id="dark-mode-css" disabled>
+    <style>
+        .profile-card{background:white;padding:15px;border-radius:15px;margin-bottom:12px;box-shadow:0 5px 15px rgba(0,0,0,0.05);text-align:center;}
+        .profile-card h2{color:#4c1d95;margin-bottom:6px;font-size:17px;}.profile-card p{margin:3px 0;color:#374151;font-size:12px;}
+        .student-photo{width:100px;height:100px;border-radius:50%;object-fit:cover;border:4px solid #a78bfa;margin:0 auto 10px auto;display:block;background:#e5e7eb;}
+        .status-badge{display:inline-block;padding:3px 8px;border-radius:50px;font-size:11px;font-weight:600;}.status-yes{background:#d1fae5;color:#065f46;}.status-no{background:#fee2e2;color:#991b1b;}
+        .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;}.action-btn{background:#a78bfa;color:white;padding:12px;border-radius:15px;text-decoration:none;font-weight:600;text-align:center;display:flex;align-items:center;justify-content:center;font-size:13px;min-height:42px;}.action-btn.primary{background:#10b981;}
+        .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0;}.stat-card{background:white;padding:10px 6px;border-radius:10px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,0.05);}.stat-card h3{font-size:18px;margin:0;}.stat-card p{margin:2px 0 0;font-size:9px;color:#6b7280;}.stat-present h3{color:#065f46;}.stat-absent h3{color:#991b1b;}.stat-total h3{color:#4c1d95;}.stat-percent h3{color:#a78bfa;}
+        .progress-section{background:white;border-radius:10px;padding:10px;margin:10px 0;box-shadow:0 3px 10px rgba(0,0,0,0.05);}.progress-section h4{color:#4c1d95;margin:0 0 6px 0;font-size:13px;}.progress-bar-bg{background:#e5e7eb;border-radius:50px;height:16px;overflow:hidden;}.progress-bar-fill{height:100%;border-radius:50px;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:10px;}
+        .chart-card{background:white;padding:12px;border-radius:10px;margin:8px 0;box-shadow:0 3px 10px rgba(0,0,0,0.05);}.chart-card h4{color:#4c1d95;margin-bottom:8px;font-size:13px;}.chart-container{position:relative;height:180px;width:100%;}
+        .warning-text{color:#ef4444;font-size:11px;}.safe-text{color:#10b981;font-size:11px;}
+    </style>
+</head>
+<body>
+    <a href="javascript:void(0)" onclick="toggleDarkMode()" id="darkToggle" style="position:fixed;top:20px;right:20px;z-index:99999;background:#a78bfa;color:white;padding:10px 18px;border-radius:50px;font-size:14px;cursor:pointer;box-shadow:0 5px 20px rgba(0,0,0,0.3);text-decoration:none;font-weight:600;">🌙 Dark</a>
+    <div class="container">
+        <img src="{{url_for('static',filename='images/logo.png')}}" alt="VisionLog" style="max-width:80px;border-radius:10px;margin-bottom:5px;display:block;margin-left:auto;margin-right:auto;">
+        <h1>📚 Student Dashboard</h1>
+        {% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}{% for c,m in messages %}<div class="flash-{{c}}">{{m}}</div>{% endfor %}{% endif %}{% endwith %}
+        <div class="profile-card">
+            {% if student.photo %}<img src="{{student.photo}}" alt="Photo" class="student-photo">{% endif %}
+            <h2>👤 {{student.name}}</h2>
+            <p><strong>Reg No:</strong> {{student.reg_no}} | <strong>Course:</strong> {{student.course}} | <strong>Year:</strong> {{student.year}}</p>
+            <p><strong>Email:</strong> {{student.email}}</p>
+            <p><strong>Face:</strong> {% if student.face_descriptor %}<span class="status-badge status-yes">✅ Yes</span>{% else %}<span class="status-badge status-no">❌ No</span>{% endif %}</p>
+        </div>
+        <div class="action-grid">{% if not student.face_descriptor %}<a href="{{url_for('register_face')}}" class="action-btn warning">📸 Register Face</a>{% else %}<a href="/student/mark-attendance" class="action-btn primary">✅ Mark Attendance</a>{% endif %}<a href="{{url_for('attendance_history')}}" class="action-btn">📅 View History</a></div>
+        
+        <div class="stats-grid"><div class="stat-card stat-present"><h3>{{stats.present}}</h3><p>✅ Present</p></div><div class="stat-card stat-absent"><h3>{{stats.total_working - stats.present}}</h3><p>❌ Absent</p></div><div class="stat-card stat-total"><h3>{{stats.total_working}}</h3><p>📅 Total Days</p></div><div class="stat-card stat-percent"><h3>{{stats.percentage}}%</h3><p>📈 Percent</p></div></div>
+        
+        <div class="progress-section"><h4>📊 Progress (Target: {{settings.minimum_percent}}%)</h4><div class="progress-bar-bg"><div class="progress-bar-fill" style="background:{% if stats.zone=='green' %}#10b981{% elif stats.zone=='yellow' %}#f59e0b{% else %}#ef4444{% endif %};width:{{stats.percentage}}%;">{{stats.percentage}}%</div></div><p style="margin:3px 0;font-size:11px;color:#6b7280;">{{stats.present}} / {{stats.total_working}} days</p>{% if stats.shortage>0 %}<p class="warning-text">⚠️ Need {{stats.shortage}} more days</p>{% else %}<p class="safe-text">✅ Requirement met</p>{% endif %}</div>
+        
+        <div class="chart-card"><h4>🍩 Present vs Absent</h4><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
+        <div class="chart-card"><h4>📅 Last 7 Days</h4><div class="chart-container"><canvas id="dailyChart"></canvas></div></div>
+        <div class="logout-section"><a href="{{url_for('student_logout')}}" class="logout-btn">🚪 Logout</a></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        new Chart(document.getElementById('pieChart'),{type:'doughnut',data:{labels:['Present','Absent'],datasets:[{data:[{{stats.present}},{{stats.total_working - stats.present}}],backgroundColor:['#10b981','#ef4444'],borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{padding:8,font:{size:11}}}}}});
+        new Chart(document.getElementById('dailyChart'),{type:'bar',data:{labels:{{daily_labels|tojson}},datasets:[{label:'Present',data:{{daily_present|tojson}},backgroundColor:'#10b981',borderRadius:4},{label:'Absent',data:{{daily_absent|tojson}},backgroundColor:'#ef4444',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true,max:1}},plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}});
+        var dCSS=document.getElementById('dark-mode-css'),dTog=document.getElementById('darkToggle');
+        function ut(){if(document.body.classList.contains('dark-mode')){dTog.textContent='☀️ Light';dTog.style.background='#fbbf24';dTog.style.color='#000';}else{dTog.textContent='🌙 Dark';dTog.style.background='#a78bfa';dTog.style.color='#fff';}}
+        if(localStorage.getItem('darkMode')==='enabled'){if(dCSS)dCSS.disabled=false;document.body.classList.add('dark-mode');}ut();
+        function toggleDarkMode(){if(document.body.classList.contains('dark-mode')){document.body.classList.remove('dark-mode');if(dCSS)dCSS.disabled=true;localStorage.setItem('darkMode','disabled');}else{document.body.classList.add('dark-mode');if(dCSS)dCSS.disabled=false;localStorage.setItem('darkMode','enabled');}ut();}
+    </script>
+</body>
+</html>

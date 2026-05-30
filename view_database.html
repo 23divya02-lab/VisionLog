@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Viewer - VisionLog</title>
+    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/dark-mode.css')}}" id="dark-mode-css" disabled>
+    <style>
+        .filter-bar{display:flex;gap:15px;align-items:center;flex-wrap:wrap;margin:15px 0;padding:12px 15px;background:#fdf2f8;border-radius:12px;}
+        .filter-bar select{padding:8px 12px;border:2px solid #e5e7eb;border-radius:50px;font-size:13px;outline:none;background:white;}
+        .filter-bar label{font-weight:600;color:#4c1d95;font-size:13px;}
+        .filter-bar .btn-sm{padding:6px 12px;font-size:13px;border-radius:50px;background:#a78bfa;color:white;text-decoration:none;}
+        table{width:100%;border-collapse:collapse;background:white;border-radius:15px;overflow:hidden;box-shadow:0 5px 15px rgba(0,0,0,0.05);margin-top:15px;}
+        th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:12px;}
+        th{background:#a78bfa;color:white;font-weight:600;font-size:11px;}
+        tr:hover{background:#fdf2f8;}
+        .zone-green{color:#10b981;font-weight:600;}
+        .zone-yellow{color:#f59e0b;font-weight:600;}
+        .zone-red{color:#ef4444;font-weight:600;}
+        .container{max-width:1400px;}
+    </style>
+</head>
+<body>
+    <a href="javascript:void(0)" onclick="toggleDarkMode()" id="darkToggle" style="position:fixed;top:20px;right:20px;z-index:99999;background:#a78bfa;color:white;padding:10px 18px;border-radius:50px;font-size:14px;cursor:pointer;box-shadow:0 5px 20px rgba(0,0,0,0.3);text-decoration:none;font-weight:600;">🌙 Dark</a>
+    <div class="container" style="max-width:1400px;">
+        <img src="{{url_for('static',filename='images/logo.png')}}" alt="VisionLog" style="max-width:80px;border-radius:10px;margin-bottom:5px;display:block;margin-left:auto;margin-right:auto;">
+        <h1>🗄️ Database Viewer</h1>
+        
+        <div class="filter-bar">
+            <label>🔍 Course:</label>
+            <select onchange="filterData()" id="courseFilter">
+    <option value="">All Courses</option>
+    {% for c in courses %}
+    <option value="{{c}}" {% if selected_course==c %}selected{% endif %}>{{c}}</option>
+    {% endfor %}
+</select>
+            
+            <label>📚 Year:</label>
+            <select onchange="filterData()" id="yearFilter">
+                <option value="">All Years</option>
+                {% for y in years %}
+                <option value="{{y}}" {% if selected_year==y %}selected{% endif %}>{{y}} Year</option>
+                {% endfor %}
+            </select>
+            
+            {% if selected_course or selected_year %}
+            <a href="{{url_for('view_database')}}" class="btn-sm">Clear Filters</a>
+            {% endif %}
+        </div>
+        
+        <h2 style="color:#4c1d95;">📋 Student Database {% if selected_course %}<span style="font-size:14px;color:#6b7280;">— {{selected_course}}</span>{% endif %}{% if selected_year %}<span style="font-size:14px;color:#6b7280;"> — {{selected_year}} Year</span>{% endif %}</h2>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Reg No</th>
+                    <th>Name</th>
+                    <th>Course</th>
+                    <th>Year</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>✅ Present</th>
+                    <th>❌ Absent</th>
+                    <th>📅 Total Days</th>
+                    <th>📈 %</th>
+                    <th>Status</th>
+                    <th>📍 Last Location</th>
+                    <th>🕐 Last Attendance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in student_data %}
+                <tr>
+                    <td><strong>{{item.student.reg_no}}</strong></td>
+                    <td>{{item.student.name}}</td>
+                    <td>{{item.student.course}}</td>
+                    <td>{{item.student.year}} Year</td>
+                    <td>{{item.student.email}}</td>
+                    <td>{{item.student.mobile}}</td>
+                    <td style="color:#065f46;font-weight:600;">{{item.stats.present}}</td>
+                    <td style="color:#991b1b;font-weight:600;">{{item.stats.total_working - item.stats.present}}</td>
+                    <td>{{item.stats.total_working}}</td>
+                    <td>{{item.stats.percentage}}%</td>
+                    <td class="{% if item.stats.zone == 'green' %}zone-green{% elif item.stats.zone == 'yellow' %}zone-yellow{% else %}zone-red{% endif %}">
+                        {{item.stats.status_text}}
+                    </td>
+                    <td>{{item.last_location}}</td>
+                    <td>{{item.last_date}}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="13" style="text-align:center;padding:20px;">No students found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <p style="margin-top:15px;color:#6b7280;">Total Students: <strong>{{student_data|length}}</strong></p>
+        <br>
+        <a href="{{url_for('admin_dashboard')}}" class="btn">← Back to Dashboard</a>
+    </div>
+    
+    <script>
+        function filterData(){
+            var course=document.getElementById('courseFilter').value;
+            var year=document.getElementById('yearFilter').value;
+            var url="{{url_for('view_database')}}";
+            var params=[];
+            if(course)params.push('course='+course);
+            if(year)params.push('year='+year);
+            if(params.length>0)url+='?'+params.join('&');
+            location=url;
+        }
+        var dCSS=document.getElementById('dark-mode-css'),dTog=document.getElementById('darkToggle');
+        function ut(){if(document.body.classList.contains('dark-mode')){dTog.textContent='☀️ Light';dTog.style.background='#fbbf24';dTog.style.color='#000';}else{dTog.textContent='🌙 Dark';dTog.style.background='#a78bfa';dTog.style.color='#fff';}}
+        if(localStorage.getItem('darkMode')==='enabled'){if(dCSS)dCSS.disabled=false;document.body.classList.add('dark-mode');}ut();
+        function toggleDarkMode(){if(document.body.classList.contains('dark-mode')){document.body.classList.remove('dark-mode');if(dCSS)dCSS.disabled=true;localStorage.setItem('darkMode','disabled');}else{document.body.classList.add('dark-mode');if(dCSS)dCSS.disabled=false;localStorage.setItem('darkMode','enabled');}ut();}
+        function showToast(m,t){var c=document.querySelector('.toast-container');if(!c){c=document.createElement('div');c.className='toast-container';document.body.appendChild(c);}var n=document.createElement('div');n.className='toast toast-'+t;n.textContent=m;c.appendChild(n);setTimeout(function(){n.remove();},3500);}
+        document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.flash-success,.flash-error,.flash-info').forEach(function(f){var t='info';if(f.classList.contains('flash-success'))t='success';if(f.classList.contains('flash-error'))t='error';showToast(f.textContent.trim(),t);f.style.display='none';});});
+    </script>
+</body>
+</html>

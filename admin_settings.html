@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Settings - VisionLog</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/dark-mode.css')}}" id="dark-mode-css" disabled>
+    <style>
+        .settings-section{background:#f3e8ff;padding:20px;border-radius:15px;margin:15px 0;}.settings-section h3{color:#4c1d95;margin-bottom:12px;}
+        .form-group{margin-bottom:15px;text-align:left;}label{display:block;margin-bottom:4px;color:#4c1d95;font-weight:500;}
+        input{width:100%;padding:10px;border:2px solid #e5e7eb;border-radius:50px;font-size:15px;box-sizing:border-box;}
+        .btn-save{background:#10b981;color:white;padding:10px 25px;border:none;border-radius:50px;font-size:15px;cursor:pointer;width:100%;}
+    </style>
+</head>
+<body>
+    <a href="javascript:void(0)" onclick="toggleDarkMode()" id="darkToggle" style="position:fixed;top:20px;right:20px;z-index:99999;background:#a78bfa;color:white;padding:10px 18px;border-radius:50px;font-size:14px;cursor:pointer;box-shadow:0 5px 20px rgba(0,0,0,0.3);text-decoration:none;font-weight:600;">🌙 Dark</a>
+    <div class="container">
+        <img src="{{url_for('static',filename='images/logo.png')}}" alt="VisionLog" style="max-width:80px;border-radius:10px;margin-bottom:5px;display:block;margin-left:auto;margin-right:auto;">
+        <h1>⚙️ Admin Settings</h1>
+        {% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}{% for c,m in messages %}<div class="flash-{{c}}">{{m}}</div>{% endfor %}{% endif %}{% endwith %}
+        <div class="settings-section"><h3>📊 Attendance Configuration</h3>
+            <form method="POST">
+                <div class="form-group"><label>Total Working Days</label><input type="number" name="total_working_days" value="{{settings.total_working_days}}" min="1" max="365" required></div>
+                <div class="form-group"><label>Minimum Attendance %</label><input type="number" name="minimum_percent" value="{{settings.minimum_percent}}" min="1" max="100" required></div>
+                <button type="submit" class="btn-save">💾 Save Settings</button>
+            </form>
+        </div>
+        <div class="settings-section"><h3>🔐 Password Recovery</h3><p style="color:#6b7280;">Reset admin password using security question.</p><a href="{{url_for('admin_forgot_password')}}" class="btn" style="background:#f87171;display:inline-block;margin-top:8px;">🔑 Reset Password</a></div>
+        <div class="settings-section"><h3>📈 System Info</h3><p><strong>Total Students:</strong> {{student_count}}</p><p><strong>Total Records:</strong> {{attendance_count}}</p><p><strong>Working Days:</strong> {{settings.total_working_days}}</p><p><strong>Min %:</strong> {{settings.minimum_percent}}%</p></div>
+        <a href="{{url_for('admin_dashboard')}}" class="btn">← Back to Dashboard</a>
+    </div>
+    <script>
+        var dCSS=document.getElementById('dark-mode-css'),dTog=document.getElementById('darkToggle');
+        function ut(){if(document.body.classList.contains('dark-mode')){dTog.textContent='☀️ Light';dTog.style.background='#fbbf24';dTog.style.color='#000';}else{dTog.textContent='🌙 Dark';dTog.style.background='#a78bfa';dTog.style.color='#fff';}}
+        if(localStorage.getItem('darkMode')==='enabled'){if(dCSS)dCSS.disabled=false;document.body.classList.add('dark-mode');}ut();
+        function toggleDarkMode(){if(document.body.classList.contains('dark-mode')){document.body.classList.remove('dark-mode');if(dCSS)dCSS.disabled=true;localStorage.setItem('darkMode','disabled');}else{document.body.classList.add('dark-mode');if(dCSS)dCSS.disabled=false;localStorage.setItem('darkMode','enabled');}ut();}
+    </script>
+</body>
+</html>

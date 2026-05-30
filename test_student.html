@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Student</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}" id="dark-mode-css" disabled>
+<body>
+    <button class="theme-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">🌙</button>
+    <h1>Student Test Page</h1>
+    <p>Student ID: {{ session.get('student_id', 'None') }}</p>
+    <p>Admin Logged In: {{ session.get('admin_logged_in', 'False') }}</p>
+    <p>Student Name: {{ session.get('student_name', 'None') }}</p>
+    <hr>
+    <a href="/student/mark-attendance">Go to Mark Attendance</a>
+    <br><br>
+    <a href="/student/dashboard">Go to Dashboard</a>
+    <br><br>
+    <a href="/admin/dashboard">Go to Admin Dashboard</a>
+    <script>
+    const darkCSS = document.getElementById('dark-mode-css');
+    const toggleBtn = document.querySelector('.theme-toggle');
+    
+    // Check saved preference
+    if (localStorage.getItem('darkMode') === 'enabled') {
+        darkCSS.disabled = false;
+        document.body.classList.add('dark-mode');
+        toggleBtn.textContent = '☀️';
+    }
+    
+    function toggleDarkMode() {
+        if (darkCSS.disabled) {
+            darkCSS.disabled = false;
+            document.body.classList.add('dark-mode');
+            toggleBtn.textContent = '☀️';
+            localStorage.setItem('darkMode', 'enabled');
+        } else {
+            darkCSS.disabled = true;
+            document.body.classList.remove('dark-mode');
+            toggleBtn.textContent = '🌙';
+            localStorage.setItem('darkMode', 'disabled');
+        }
+    }
+</script>
+</body>
+</html>

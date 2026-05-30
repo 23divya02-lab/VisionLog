@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Attendance - VisionLog</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/dark-mode.css')}}" id="dark-mode-css" disabled>
+    <style>table{width:100%;border-collapse:collapse;background:white;border-radius:15px;overflow:hidden;margin:15px 0;}th,td{padding:10px;text-align:left;border-bottom:1px solid #e5e7eb;}th{background:#a78bfa;color:white;}</style>
+</head>
+<body>
+    <a href="javascript:void(0)" onclick="toggleDarkMode()" id="darkToggle" style="position:fixed;top:20px;right:20px;z-index:99999;background:#a78bfa;color:white;padding:10px 18px;border-radius:50px;font-size:14px;cursor:pointer;box-shadow:0 5px 20px rgba(0,0,0,0.3);text-decoration:none;font-weight:600;">🌙 Dark</a>
+    <div class="container" style="max-width:800px;">
+        <img src="{{url_for('static',filename='images/logo.png')}}" alt="VisionLog" style="max-width:80px;border-radius:10px;margin-bottom:5px;display:block;margin-left:auto;margin-right:auto;">
+        <h1>📅 My Attendance History</h1>
+        <div class="stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:15px 0;">{% if stats %}<div class="stat-card" style="background:white;padding:10px;border-radius:10px;text-align:center;"><h3 style="color:#065f46;margin:0;">{{stats.present}}</h3><p style="font-size:10px;color:#6b7280;">✅ Present</p></div><div class="stat-card" style="background:white;padding:10px;border-radius:10px;text-align:center;"><h3 style="color:#991b1b;margin:0;">{{stats.total_working-stats.present}}</h3><p style="font-size:10px;color:#6b7280;">❌ Absent</p></div><div class="stat-card" style="background:white;padding:10px;border-radius:10px;text-align:center;"><h3 style="color:#4c1d95;margin:0;">{{stats.total_working}}</h3><p style="font-size:10px;color:#6b7280;">📅 Total</p></div><div class="stat-card" style="background:white;padding:10px;border-radius:10px;text-align:center;"><h3 style="color:#a78bfa;margin:0;">{{stats.percentage}}%</h3><p style="font-size:10px;color:#6b7280;">📈 %</p></div>{% endif %}</div>
+        <table><thead><tr><th>Date</th><th>Time</th><th>Status</th><th>Location</th></tr></thead><tbody>{% for r in records %}<tr><td>{{r.timestamp.strftime('%Y-%m-%d') if r.timestamp else ''}}</td><td>{{r.timestamp.strftime('%H:%M:%S') if r.timestamp else ''}}</td><td style="color:{% if r.status=='Present' %}#065f46{% else %}#991b1b{% endif %};font-weight:600;">{{r.status}}</td><td>{{r.location_name or 'N/A'}}</td></tr>{% else %}<tr><td colspan="4" style="text-align:center;">No records.</td></tr>{% endfor %}</tbody></table>
+        <a href="{{url_for('student_dashboard')}}" class="btn">← Back</a>
+    </div>
+    <script>
+        var dCSS=document.getElementById('dark-mode-css'),dTog=document.getElementById('darkToggle');
+        function ut(){if(document.body.classList.contains('dark-mode')){dTog.textContent='☀️ Light';dTog.style.background='#fbbf24';dTog.style.color='#000';}else{dTog.textContent='🌙 Dark';dTog.style.background='#a78bfa';dTog.style.color='#fff';}}
+        if(localStorage.getItem('darkMode')==='enabled'){if(dCSS)dCSS.disabled=false;document.body.classList.add('dark-mode');}ut();
+        function toggleDarkMode(){if(document.body.classList.contains('dark-mode')){document.body.classList.remove('dark-mode');if(dCSS)dCSS.disabled=true;localStorage.setItem('darkMode','disabled');}else{document.body.classList.add('dark-mode');if(dCSS)dCSS.disabled=false;localStorage.setItem('darkMode','enabled');}ut();}
+    </script>
+</body>
+</html>

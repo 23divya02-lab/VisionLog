@@ -1,0 +1,120 @@
+/* Dark Mode Toggle Switch */
+.theme-toggle-wrapper {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(10px);
+    padding: 8px 15px;
+    border-radius: 50px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+body.dark-mode .theme-toggle-wrapper {
+    background: rgba(30,30,50,0.9);
+}
+
+.theme-toggle-icon {
+    font-size: 18px;
+    pointer-events: none;
+}
+
+.theme-toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 26px;
+    background: #a78bfa;
+    border-radius: 50px;
+    pointer-events: none;
+    transition: background 0.3s;
+}
+
+body.dark-mode .theme-toggle-switch {
+    background: #6d28d9;
+}
+
+.theme-toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+
+body.dark-mode .theme-toggle-switch::after {
+    transform: translateX(24px);
+}
+
+/* Dark Mode Body Styles */
+body.dark-mode {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+}
+
+body.dark-mode .container {
+    background: rgba(30, 30, 50, 0.9) !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode h4 {
+    color: #c4b5fd !important;
+}
+
+body.dark-mode p, body.dark-mode label {
+    color: #a5b4fc !important;
+}
+
+body.dark-mode input, body.dark-mode select {
+    background: #3d3d55 !important;
+    color: #e5e7eb !important;
+    border-color: #555 !important;
+}
+
+body.dark-mode .card,
+body.dark-mode .profile-card,
+body.dark-mode .stat-card,
+body.dark-mode .chart-card,
+body.dark-mode .progress-section {
+    background: #2d2d44 !important;
+    color: #e5e7eb !important;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important;
+}
+
+body.dark-mode table {
+    background: #2d2d44 !important;
+}
+
+body.dark-mode th {
+    background: #4c1d95 !important;
+}
+
+body.dark-mode td {
+    border-bottom: 1px solid #444 !important;
+}
+
+body.dark-mode .btn {
+    background: #6d28d9 !important;
+}
+
+body.dark-mode .flash-success {
+    background: #064e3b !important;
+    color: #a7f3d0 !important;
+}
+
+body.dark-mode .flash-error {
+    background: #7f1d1d !important;
+    color: #fecaca !important;
+}
+
+body.dark-mode .filter-bar {
+    background: #2d2d44 !important;
+}
